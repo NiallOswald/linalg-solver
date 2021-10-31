@@ -1,2 +1,2 @@
 # linalg-solver
-A Python package based for the MATH50003 Linear Algebra and Numerical Analysis Course
+A Python package based on the MATH50003 Linear Algebra and Numerical Analysis Course
