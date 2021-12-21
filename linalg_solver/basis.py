@@ -6,7 +6,6 @@ import sympy as sy
 
 def extend_basis(vecs, field='R'):
     """Return a basis containing the given row vectors."""
-
     return np.concatenate(vecs, kernel_basis(vecs, field))
 
 
@@ -37,13 +36,14 @@ def _zerofunc(field):
     """Return the iszerofunc for a given field."""
     if field == 'R' or field == 'C':
         # Vectors over the real or complex fields
-        iszerofunc = lambda x: x.is_zero
+        iszerofunc = lambda x: x.is_zero  # noqa:E731
     elif sy.isprime(field):
         # Vectors over finite fields
-        iszerofunc = lambda x: (x % field) == 0
+        iszerofunc = lambda x: (x % field) == 0  # noqa:E731
     else:
         raise ValueError(
-            "Unexpected value for field. field should be one of 'R' or 'C', or a prime."
+            "Unexpected value for field. field should be one of 'R' or 'C', "
+            "or a prime."
         )
 
     return iszerofunc

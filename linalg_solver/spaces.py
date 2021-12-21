@@ -7,16 +7,17 @@ from .basis import linearise, kernel_basis
 class Span:
     """A Spanning set over a field."""
 
-    def __init__(self, vecs, field='R'):
+    def __init__(self, vecs, field='R'):  # noqa:D107
         self.basis = linearise(vecs)
         self.dim = self.basis.shape[0]
         self.space = self.basis.shape[1]
         self.field = field
 
     def __contains__(self, other):
-        """Check whether a space contains a vector or subspace."""
+        """Check whether a space contains a vector."""
         if isinstance(other, np.ndarray):
-            return not Span(np.concatenate([self.basis, np.array([other])]), self.field) == self.dim
+            return not Span(np.concatenate([self.basis, np.array([other])]),
+                            self.field) == self.dim
 
         else:
             return NotImplemented
@@ -25,7 +26,7 @@ class Span:
         """Return the sum of the two subspaces."""
         if isinstance(other, np.ndarray):
             return Coset(self, other, self.field)
-        
+
         elif isinstance(other, Span):
             if self.field != other.field:
                 raise TypeError("Subspaces must be over the same field.")
@@ -39,26 +40,29 @@ class Span:
 class Kernel(Span):
     """The kernel of a matrix over a field."""
 
-    def __init__(self, mat, field='R'):
+    def __init__(self, mat, field='R'):  # noqa:D107
         return super().__init__(kernel_basis(mat, field), field)
 
 
 class QuotientSpace(Span):
     """The quotient space of a subspace and a vectorspace."""
 
-    def __init__(self, space, subspace, field):
+    def __init__(self, space, subspace, field):  # noqa:D107
         if subspace not in space:
             raise ValueError(
                 "The subspace must be contained within the given space."
             )
 
-        self.basis = np.array(Coset(subspace, vec, field) for vec in linearise(space.basis))
+        self.basis = np.array(Coset(subspace, vec, field)
+                              for vec in linearise(space.basis))
         self.dim = space.dim - subspace.dim
         self.field = field
 
     def __contains__(self, other):
+        """Check whether a quotient space contains a coset."""
         if isinstance(other, Coset):
-            return other.vector in Span([coset.vector for coset in self.basis], self.field)
+            return other.vector in Span([coset.vector for coset in self.basis],
+                                        self.field)
 
         else:
             return NotImplemented
@@ -67,15 +71,19 @@ class QuotientSpace(Span):
 class Coset(Span):
     """A right-coset."""
 
-    def __init__(self, subspace, vec):
+    def __init__(self, subspace, vec):  # noqa:D107
         self.vector = np.array(vec)
         self.subspace = subspace
-        return super().__init__(np.array(self.vector + w for w in subspace.basis), subspace.field)
+        return super().__init__(
+            np.array(self.vector + w for w in subspace.basis), subspace.field
+        )
 
     def __eq__(self, other):
+        """Check whether two cosets are equivalent."""
         return self.vector - other.vector in self.subspace
 
     def __add__(self, other):
+        """Return the sum of two cosets."""
         if isinstance(other, Coset):
             return Coset(self.subspace, self.vec + other, self.field)
 
@@ -86,6 +94,6 @@ class Coset(Span):
 class FieldSpace(Span):
     """A vector space of column vectors."""
 
-    def __init__(self, field, n):
+    def __init__(self, field, n):  # noqa:D107
         vecs = np.identity(n)
         return super().__init__(vecs, field)
