@@ -4,6 +4,7 @@ from .polynomials import field_roots
 from .basis import kernel_basis, extend_basis
 from .spaces import FieldSpace, Span, QuotientSpace
 import numpy as np
+from sympy import zeros
 
 
 def triangularise(mat, field='R'):
@@ -47,9 +48,11 @@ def basis_change_matrix(basis):
 
 def field_eigvals(mat, field='R'):
     """Return the eigenvalues of a matrix over an arbitrary field."""
-    from sympy import Matrix
+    from sympy import Matrix, Symbol
 
-    char = Matrix(mat).charpoly()
+    x = Symbol('x')
+    char = Matrix(mat).charpoly(x)
+
     return np.unique(field_roots(char, field))
 
 
@@ -60,3 +63,64 @@ def field_eigvecs(mat, field='R'):
                         for x in eigvals])
 
     return eigvecs
+
+
+def poly_matrix(poly, mat):
+    """Substitute a matrix into a polynomial."""
+    coeffs = poly.all_coeffs()[::-1]
+
+    res = zeros(mat.shape[0])
+    for i in range(len(coeffs)):
+        res += coeffs[i]*(mat**i)
+
+    return res
+
+
+def min_poly(mat, field='R'):
+    """Return the minimal polynomial of a matrix."""
+    import sympy as sy
+
+    # Find the characteristic polynomial
+    x = sy.Symbol('x')
+    char = sy.Matrix(mat).charpoly(x)
+
+    # Split the characteristic polynomial into irreducibles
+    if field == 'R':
+        factors_nonmon = sy.factor_list(char, domain='RR')[1]
+
+        factors = np.array([(sy.monic(factor), deg)
+                            for factor, deg in factors_nonmon])
+
+    elif field == 'C':
+        roots = field_roots(char, field='C')
+        factors_rep = np.array([x - root for root in roots])
+
+        factors = np.array([(factor, np.sum(factors_rep == factor))
+                            for factor in np.unique(factors_rep)])
+
+    else:
+        factors_split = np.array(sy.factor_list(char, modulus=field))
+        factor_list, degree_list = factors_split[:, 0], factors_split[:, 1]
+        degree_unique = np.array([np.sum(
+            degree_list[np.where(factor_list == factor)]
+        ) for factor in np.unique(factor_list)])
+
+        factors = np.column_stack(np.unique(factor_list), degree_unique)
+
+    # Find the minimal polynomial
+    trial_deg = factors[:, 1]
+
+    # Iterate over the factors
+    for i in range(factors.shape[0]):
+        trial_poly = np.prod(factors[:, 0] ** trial_deg)
+        val = poly_matrix(trial_poly, mat)
+
+        # Reduce the degree until the evaluation is non-zero
+        while not np.asarray(val, dtype='float64').any():
+            trial_deg[i] -= 1
+            trial_poly = np.prod(factors[:, 0] ** trial_deg)
+            val = poly_matrix(trial_poly, mat)
+
+        trial_deg[i] += 1
+
+    return np.prod(factors[:, 0] ** trial_deg)
