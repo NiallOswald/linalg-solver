@@ -8,18 +8,17 @@ def field_roots(poly, field='R'):
     import sympy as sy
 
     if field == 'R':
-        return sy.polys.polytools.real_roots(poly)
+        return sy.real_roots(poly)
 
     elif field == 'C':
-        deg = sy.polys.polytools.degree(poly)
+        deg = sy.degree(poly)
         return [poly.root(i) for i in range(deg)]
 
     else:
-        fact = sy.polys.factor(poly, modulus=field)
-        real_roots = sy.polys.polytools.real_roots(fact)
-        iszerofunc = _zerofunc(field)
+        fact = sy.factor(poly, modulus=field)
+        real_roots = sy.real_roots(fact)
 
-        return np.array([root for root in real_roots if iszerofunc(root)])
+        return np.array([root % field for root in real_roots])
 
 
 def _zerofunc(field):
