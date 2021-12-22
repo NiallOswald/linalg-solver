@@ -115,9 +115,31 @@ class Coset(Span):
             return NotImplemented
 
 
+class CyclicSubspace(Span):
+    """The cyclic subspace of a vector with respect to a map."""
+
+    def __init__(self, vec, mat, field='R'):  # noqa:D107
+        basis = cyclic_basis(vec, mat, field)
+        return super().__init__(basis, field)
+
+
 class FieldSpace(Span):
     """A vector space of column vectors."""
 
     def __init__(self, field, n):  # noqa:D107
         vecs = np.identity(n)
         return super().__init__(vecs, field)
+
+
+def primary_decomposition(mat, field):
+    """Return the primary decomposition of a matrix."""
+
+
+def cyclic_basis(vec, mat, field):
+    """Return the basis of a cyclic subspace."""
+    subspace = Span([vec], field)
+
+    while not (image := mat @ np.transpose(vec)) in subspace:
+        subspace = subspace + Span([image], field)
+
+    return subspace.basis
