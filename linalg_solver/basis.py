@@ -1,33 +1,30 @@
 """Module containing helper functions that operate on sets of vectors."""
 
 import numpy as np
-import sympy as sy
 from .polynomials import _zerofunc
 
 
 def extend_basis(vecs, field='R'):
     """Return a basis containing the given row vectors."""
-    return np.concatenate(vecs, kernel_basis(vecs, field))
+    return np.concatenate([vecs, kernel_basis(vecs, field)])
 
 
 def kernel_basis(mat, field='R'):
     """Return a basis of the kernel of a matrix."""
-    # Setup iszerofunc for the given field
-    iszerofunc = _zerofunc(field)
+    from sympy import Matrix
 
     # Find the nullspace
-    null = mat.nullspace(iszerofunc=iszerofunc)
+    null = Matrix(mat).nullspace(iszerofunc=_zerofunc(field))
 
-    return np.transpose(np.hstack(null))
+    return np.transpose(np.hstack(np.asarray(null, dtype='float64')))
 
 
 def linearise(vecs, field='R'):
     """Return a set of linearly independent vectors."""
-    # Setup iszerofunc for the given field
-    iszerofunc = _zerofunc(field)
+    from sympy import Matrix
 
     # Find linearly independent rows
-    mat = sy.Matrix(vecs)
-    ind = np.array(mat.T.rref(iszerofunc=iszerofunc)[1])
+    mat = Matrix(vecs)
+    ind = np.array(mat.T.rref(iszerofunc=_zerofunc(field))[1])
 
-    return np.array(mat)[ind]
+    return np.asarray(mat, dtype='float64')[ind]

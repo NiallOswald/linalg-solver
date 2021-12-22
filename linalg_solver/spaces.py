@@ -2,6 +2,7 @@
 
 import numpy as np
 from .basis import linearise, kernel_basis
+from numbers import Number
 
 
 class Span:
@@ -47,16 +48,23 @@ class Kernel(Span):
 class QuotientSpace(Span):
     """The quotient space of a subspace and a vectorspace."""
 
-    def __init__(self, space, subspace, field):  # noqa:D107
+    def __init__(self, space, subspace):  # noqa:D107
         if subspace not in space:
             raise ValueError(
                 "The subspace must be contained within the given space."
             )
 
-        self.basis = np.array(Coset(subspace, vec, field)
-                              for vec in linearise(space.basis))
+        if subspace.field != space.field:
+            raise ValueError(
+                "The subspace and space must be over the same field."
+            )
+
+        self.field = space.field
+        self.basis = np.array([
+            Coset(subspace, vec) for vec in kernel_basis(subspace.basis,
+                                                         self.field)
+        ])
         self.dim = space.dim - subspace.dim
-        self.field = field
 
     def __contains__(self, other):
         """Check whether a quotient space contains a coset."""
@@ -75,7 +83,7 @@ class Coset(Span):
         self.vector = np.array(vec)
         self.subspace = subspace
         return super().__init__(
-            np.array(self.vector + w for w in subspace.basis), subspace.field
+            np.array([self.vector + w for w in subspace.basis]), subspace.field
         )
 
     def __eq__(self, other):
@@ -85,7 +93,23 @@ class Coset(Span):
     def __add__(self, other):
         """Return the sum of two cosets."""
         if isinstance(other, Coset):
-            return Coset(self.subspace, self.vec + other, self.field)
+            return Coset(self.subspace, self.vector + other.vector)
+
+        else:
+            return NotImplemented
+
+    def __mul__(self, other):
+        """Return the scalar multiple of a coset."""
+        if isinstance(other, Number):
+            return Coset(self.subspace, other*self.vector)
+
+        else:
+            return NotImplemented
+
+    def __rmul__(self, other):
+        """Return the scalar multiple of a coset."""
+        if isinstance(other, Number):
+            return Coset(self.subspace, other*self.vector)
 
         else:
             return NotImplemented
