@@ -59,8 +59,10 @@ def field_eigvals(mat, field='R'):
 def field_eigvecs(mat, field='R'):
     """Return the eigenvectors of a matrix over an arbitrary field."""
     eigvals = field_eigvals(mat, field)
-    eigvecs = np.array([kernel_basis(mat - x*np.identity(mat.shape[0]), field)
-                        for x in eigvals])
+    eigvecs = np.array([
+        kernel_basis(mat - x * np.identity(mat.shape[0]), field)
+        for x in eigvals
+    ])
 
     return eigvecs
 
@@ -71,7 +73,7 @@ def poly_matrix(poly, mat):
 
     res = zeros(mat.shape[0])
     for i in range(len(coeffs)):
-        res += coeffs[i]*(mat**i)
+        res += coeffs[i] * (mat**i)
 
     return res
 
@@ -101,9 +103,10 @@ def min_poly(mat, field='R'):
     else:
         factors_split = np.array(sy.factor_list(char, modulus=field))
         factor_list, degree_list = factors_split[:, 0], factors_split[:, 1]
-        degree_unique = np.array([np.sum(
-            degree_list[np.where(factor_list == factor)]
-        ) for factor in np.unique(factor_list)])
+        degree_unique = np.array([
+            np.sum(degree_list[np.where(factor_list == factor)])
+            for factor in np.unique(factor_list)
+        ])
 
         factors = np.column_stack(np.unique(factor_list), degree_unique)
 
@@ -112,15 +115,15 @@ def min_poly(mat, field='R'):
 
     # Iterate over the factors
     for i in range(factors.shape[0]):
-        trial_poly = np.prod(factors[:, 0] ** trial_deg)
+        trial_poly = np.prod(factors[:, 0]**trial_deg)
         val = poly_matrix(trial_poly, mat)
 
         # Reduce the degree until the evaluation is non-zero
         while not np.asarray(val, dtype='float64').any():
             trial_deg[i] -= 1
-            trial_poly = np.prod(factors[:, 0] ** trial_deg)
+            trial_poly = np.prod(factors[:, 0]**trial_deg)
             val = poly_matrix(trial_poly, mat)
 
         trial_deg[i] += 1
 
-    return np.prod(factors[:, 0] ** trial_deg)
+    return np.prod(factors[:, 0]**trial_deg)

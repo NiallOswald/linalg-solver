@@ -34,7 +34,6 @@ def _zerofunc(field):
     else:
         raise ValueError(
             "Unexpected value for field. field should be one of 'R' or 'C', "
-            "or a prime."
-        )
+            "or a prime.")
 
     return iszerofunc
