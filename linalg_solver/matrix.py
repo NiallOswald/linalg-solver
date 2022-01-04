@@ -1,10 +1,9 @@
 """Module for finding favorable forms of matrices."""
 
-from .polynomials import field_roots
+from .polynomials import field_roots, as_factors
 from .basis import kernel_basis, extend_basis
-from .spaces import FieldSpace, Span, QuotientSpace
+from .spaces import FieldSpace, Kernel, Span, QuotientSpace
 import numpy as np
-from sympy import zeros
 
 
 def triangularise(mat, field='R'):
@@ -71,9 +70,9 @@ def poly_matrix(poly, mat):
     """Substitute a matrix into a polynomial."""
     coeffs = poly.all_coeffs()[::-1]
 
-    res = zeros(mat.shape[0])
-    for i in range(len(coeffs)):
-        res += coeffs[i] * (mat**i)
+    res = coeffs[0] * np.identity(mat.shape[0])
+    for i in range(1, len(coeffs)):
+        res += coeffs[i] * np.linalg.matrix_power(mat, i)
 
     return res
 
@@ -86,29 +85,8 @@ def min_poly(mat, field='R'):
     x = sy.Symbol('x')
     char = sy.Matrix(mat).charpoly(x)
 
-    # Split the characteristic polynomial into irreducibles
-    if field == 'R':
-        factors_nonmon = sy.factor_list(char, domain='RR')[1]
-
-        factors = np.array([(sy.monic(factor), deg)
-                            for factor, deg in factors_nonmon])
-
-    elif field == 'C':
-        roots = field_roots(char, field='C')
-        factors_rep = np.array([x - root for root in roots])
-
-        factors = np.array([(factor, np.sum(factors_rep == factor))
-                            for factor in np.unique(factors_rep)])
-
-    else:
-        factors_split = np.array(sy.factor_list(char, modulus=field))
-        factor_list, degree_list = factors_split[:, 0], factors_split[:, 1]
-        degree_unique = np.array([
-            np.sum(degree_list[np.where(factor_list == factor)])
-            for factor in np.unique(factor_list)
-        ])
-
-        factors = np.column_stack(np.unique(factor_list), degree_unique)
+    # Split the characteristic polynomial into irreducible factors
+    factors = as_factors(char, field)
 
     # Find the minimal polynomial
     trial_deg = factors[:, 1]
@@ -127,3 +105,16 @@ def min_poly(mat, field='R'):
         trial_deg[i] += 1
 
     return np.prod(factors[:, 0]**trial_deg)
+
+
+def primary_decomposition(mat, field='R'):
+    """Return the primary decomposition of a matrix."""
+    # Find the irreducible factors in the minimal polynomial
+    factors = as_factors(min_poly(mat), field)
+
+    # Find the primary decomposition
+    subspaces = [
+        Kernel(poly_matrix(poly**deg, mat), field) for poly, deg in factors
+    ]
+
+    return subspaces

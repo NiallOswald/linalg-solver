@@ -129,10 +129,6 @@ class FieldSpace(Span):
         return super().__init__(vecs, field)
 
 
-def primary_decomposition(mat, field):
-    """Return the primary decomposition of a matrix."""
-
-
 def cyclic_basis(vec, mat, field):
     """Return the basis of a cyclic subspace."""
     subspace = Span([vec], field)
