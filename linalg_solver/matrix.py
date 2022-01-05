@@ -94,7 +94,7 @@ def min_poly(mat, field='R'):
     # Iterate over the factors
     for i in range(factors.shape[0]):
         trial_poly = np.prod(factors[:, 0]**trial_deg)
-        val = np.asarray(poly_matrix(trial_poly, mat), dtype='float64')
+        val = poly_matrix(trial_poly, mat).astype('float64')
 
         # Convert the output matrix to be over the correct field
         if not (field == 'R' or field == 'C'):
