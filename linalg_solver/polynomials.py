@@ -42,14 +42,7 @@ def as_factors(poly, field='R'):
                             for factor in np.unique(factors_rep)])
 
     else:
-        factors_split = np.array(sy.factor_list(poly, modulus=field))
-        factor_list, degree_list = factors_split[:, 0], factors_split[:, 1]
-        degree_unique = np.array([
-            np.sum(degree_list[np.where(factor_list == factor)])
-            for factor in np.unique(factor_list)
-        ])
-
-        factors = np.column_stack(np.unique(factor_list), degree_unique)
+        factors = np.array(sy.factor_list(poly, modulus=field)[1])
 
     return factors
 

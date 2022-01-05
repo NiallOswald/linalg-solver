@@ -94,10 +94,14 @@ def min_poly(mat, field='R'):
     # Iterate over the factors
     for i in range(factors.shape[0]):
         trial_poly = np.prod(factors[:, 0]**trial_deg)
-        val = poly_matrix(trial_poly, mat)
+        val = np.asarray(poly_matrix(trial_poly, mat), dtype='float64')
+
+        # Convert the output matrix to be over the correct field
+        if not (field == 'R' or field == 'C'):
+            val = np.mod(val, field)
 
         # Reduce the degree until the evaluation is non-zero
-        while not np.asarray(val, dtype='float64').any():
+        while not val.any():
             trial_deg[i] -= 1
             trial_poly = np.prod(factors[:, 0]**trial_deg)
             val = poly_matrix(trial_poly, mat)
